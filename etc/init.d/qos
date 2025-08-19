@@ -10,7 +10,7 @@ STOP=50
 
 USE_PROCD=1
 PROG=/usr/sbin/qos.sh
-CONFIG_FILE=/etc/qos.conf
+CONFIG_FILE=/root/etc/qos.conf
 PID_FILE=/var/run/qos.pid
 
 # Carica configurazione dal file .conf

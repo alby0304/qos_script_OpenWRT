@@ -18,7 +18,7 @@ set -e  # Esci in caso di errore
 # ============================================
 
 # File di configurazione esterno (opzionale)
-CONFIG_FILE="/etc/qos.conf"
+CONFIG_FILE="/root/etc/qos.conf"
 
 # Carica configurazione esterna se esiste
 [ -f "$CONFIG_FILE" ] && . "$CONFIG_FILE"
@@ -55,9 +55,9 @@ BANDA_VOIP=${BANDA_VOIP:-$((BANDA_UPLOAD / 5))}  # 20% per VoIP
 LATENZA_VOIP=${LATENZA_VOIP:-10}                  # 10ms latenza massima
 
 # --- Percorsi Comandi ---
-TC=${TC:-"/usr/sbin/tc"}
+TC=${TC:-"/sbin/tc"}
 IPT=${IPT:-"/usr/sbin/iptables"}
-IP=${IP:-"/usr/sbin/ip"}
+IP=${IP:-"/sbin/ip"}
 MODPROBE=${MODPROBE:-"/sbin/modprobe"}
 
 # --- Opzioni di Debug e Logging ---
@@ -71,10 +71,12 @@ VERBOSE=${VERBOSE:-1}
 
 # Inizializza logging
 init_logging() {
-    # Log file sempre aggiornato
-    exec >>"$LOG_FILE" 2>&1
-    echo "=== QoS Script Avviato: $(date) ==="
+    if [ "$VERBOSE" -eq 1 ]; then
+        exec 2>&1 | tee -a "$LOG_FILE"
+        echo "=== QoS Script Avviato: $(date) ===" >> "$LOG_FILE"
+    fi
 }
+
 
 # Funzioni di output con colori ANSI
 log_info() {
@@ -157,7 +159,7 @@ check_prerequisites() {
 }
 
 # Calcola dimensione buffer ottimale (BDP - Bandwidth Delay Product)
-calculate_buffer_size() {
+calculate_buffer_size() { 
     local bandwidth=$1  # in kbit/s
     local rtt=${2:-50}  # RTT in ms (default 50ms)
     
@@ -294,7 +296,7 @@ setup_hfsc_class() {
     esac
     
     # Aggiungi SFQ (Stochastic Fair Queuing) alla classe foglia per fairness
-    run_cmd $TC qdisc add dev $iface parent $classid handle ${classid##*:}: sfq perturb 10
+    #run_cmd $TC qdisc add dev $iface parent $classid handle ${classid##*:}: sfq perturb 10
     
     return 0
 }
