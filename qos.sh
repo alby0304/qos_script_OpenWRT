@@ -488,51 +488,59 @@ show_statistics() {
 monitor_realtime() {
     local iface=${1:-$IFACE_WAN}
     local interval=${2:-2}
-    
+
     log_info "Monitoraggio in tempo reale (Ctrl+C per uscire)"
-    
-    # Salva posizione cursore
-    tput sc
-    
-    while true; do
-        # Torna alla posizione salvata e pulisci schermo
-        tput rc
-        tput ed
+
+    while :; do
+        clear
         
+
         echo "=== MONITOR QOS REAL-TIME - $(date) ==="
-        echo ""
+        echo
         echo "Classe          Pacchetti   Bytes        Rate         Dropped"
         echo "----------------------------------------------------------------"
-        
-        # Estrai e formatta statistiche
-        $TC -s class show dev $iface | awk '
-            /class hfsc/ { 
-                class=$3
-                getline
-                if (/Sent/) {
-                    packets=$2
-                    bytes=$4
-                    dropped=$7
-                    rate=$9" "$10
-                    
-                    name="UNKNOWN"
-                    if (class == "1:10") name="INTERATTIVO"
-                    else if (class == "1:20") name="VOIP"
-                    else if (class == "1:100") name="ALTA_PRIO"
-                    else if (class == "1:200") name="MEDIA_PRIO"
-                    else if (class == "1:300") name="BASSA_PRIO"
-                    else if (class == "1:999") name="DEFAULT"
-                    
-                    printf "%-15s %-10s %-12s %-12s %s\n", 
-                        name, packets, bytes, rate, dropped
+
+        # Estrai e formatta statistiche in modo robusto
+        # - legge la riga "class hfsc ..." (classid è il 3° campo, es. 1:10)
+        # - legge la riga successiva con "Sent ... (dropped ...)" e "rate ..."
+        # - cerca i token per nome per evitare dipendere dalle posizioni
+        $TC -s class show dev "$iface" | awk '
+            /class[[:space:]]+hfsc/ {
+                cid = $3
+                name = "UNKNOWN"
+                if (cid=="1:10")   name="INTERATTIVO"
+                else if (cid=="1:20")  name="VOIP"
+                else if (cid=="1:100") name="ALTA_PRIO"
+                else if (cid=="1:200") name="MEDIA_PRIO"
+                else if (cid=="1:300") name="BASSA_PRIO"
+                else if (cid=="1:999") name="DEFAULT"
+
+                # leggi la riga successiva con le stats
+                if (getline > 0) {
+                    pkt="-"; bytes="-"; dropped="-"; rate="-"
+                    # scorri i campi cercando le etichette
+                    for (i=1; i<=NF; i++) {
+                        if ($i=="Sent") {
+                            # Formato tipico: Sent <bytes> bytes <pkts> pkt ...
+                            if ((i+1)<=NF) bytes=$(i+1)
+                            if ((i+3)<=NF) pkt=$(i+3)
+                            gsub(/[,()]/,"",bytes); gsub(/[,()]/,"",pkt)
+                        }
+                        if ($i=="dropped") {
+                            if ((i+1)<=NF) { dropped=$(i+1); gsub(/[,()]/,"",dropped) }
+                        }
+                        if ($i=="rate") {
+                            if ((i+2)<=NF) rate=$(i+1)" "$(i+2)   # es. "100Kbit" "rate"
+                        }
+                    }
+                    printf "%-15s %-10s %-12s %-12s %s\n", name, pkt, bytes, rate, dropped
                 }
             }
         '
-        
-        echo ""
+
+        echo
         echo "Premi Ctrl+C per terminare"
-        
-        sleep $interval
+        sleep "$interval"
     done
 }
 
