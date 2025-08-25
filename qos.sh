@@ -3,8 +3,8 @@
 # Script di Qualità del Servizio per OpenWrt
 # Basato sulle linee guida ufficiali HFSC di Kenjiro Cho (IIJ Lab)
 # 
-# Versione: 3.0
-# Autore: [Il tuo nome]
+# Versione: 1.0
+# Autore: Alberto Bettini
 # Data: 2024
 #
 # Questo script implementa un sistema di QoS usando HFSC (Hierarchical Fair Service Curve)
