@@ -18,7 +18,7 @@ set -e  # Esci in caso di errore
 # ============================================
 
 # File di configurazione esterno (opzionale)
-CONFIG_FILE="/root/etc/qos.conf"
+CONFIG_FILE="/etc/qos.conf"
 
 # Carica configurazione esterna se esiste
 [ -f "$CONFIG_FILE" ] && . "$CONFIG_FILE"
@@ -346,7 +346,7 @@ setup_user_classes() {
 # ============================================
 
 # Configura marcatura con iptables
-setup_packet_marking() {
+setup_packet_marking() 
     log_info "Configurazione marcatura pacchetti..."
     
     # Crea catena custom per QoS
@@ -358,27 +358,31 @@ setup_packet_marking() {
     $IPT -t mangle -A POSTROUTING -o $IFACE_WAN -j QOS_MARK
     
     # --- MARCA 10: Traffico Interattivo ---
-    # SSH
-    $IPT -t mangle -A QOS_MARK -p tcp --dport 22 -j MARK --set-mark 10
-    $IPT -t mangle -A QOS_MARK -p tcp --sport 22 -j MARK --set-mark 10
-    
-    # DNS
-    $IPT -t mangle -A QOS_MARK -p udp --dport 53 -j MARK --set-mark 10
-    $IPT -t mangle -A QOS_MARK -p tcp --dport 53 -j MARK --set-mark 10
-    
-    # ICMP (ping)
+    for port in $(echo $INTERACTIVE_PORTS_UDP | tr ',' ' '); do
+        $IPT -t mangle -A QOS_MARK -p udp --dport $port -j MARK --set-mark 10
+        $IPT -t mangle -A QOS_MARK -p udp --sport $port -j MARK --set-mark 10
+    done
+
+    # TCP
+    for port in $(echo $INTERACTIVE_PORTS_TCP | tr ',' ' '); do
+        $IPT -t mangle -A QOS_MARK -p tcp --dport $port -j MARK --set-mark 10
+        $IPT -t mangle -A QOS_MARK -p tcp --sport $port -j MARK --set-mark 10
+    done
+
+    # --- ICMP (ping) ---
     $IPT -t mangle -A QOS_MARK -p icmp -j MARK --set-mark 10
-    
-    # NTP
-    $IPT -t mangle -A QOS_MARK -p udp --dport 123 -j MARK --set-mark 10
+
     
     # --- MARCA 20: VoIP/Video ---
-    # SIP
-    $IPT -t mangle -A QOS_MARK -p udp --dport 5060:5061 -j MARK --set-mark 20
-    # RTP
-    $IPT -t mangle -A QOS_MARK -p udp --dport 10000:20000 -j MARK --set-mark 20
-    # Teams/Zoom/WebRTC
-    $IPT -t mangle -A QOS_MARK -p udp --dport 3478:3481 -j MARK --set-mark 20
+    # UDP
+    for port in $(echo $VOIP_PORTS_UDP | tr ',' ' '); do
+        $IPT -t mangle -A QOS_MARK -p udp --dport $port -j MARK --set-mark 20
+    done
+
+    # TCP
+    for port in $(echo $VOIP_PORTS_TCP | tr ',' ' '); do
+        $IPT -t mangle -A QOS_MARK -p tcp --dport $port -j MARK --set-mark 20
+    done
     
     # --- MARCA 100: Utente Alta Priorità ---
     for net in $(echo $RETE_PRIORITA_ALTA | tr ',' ' '); do
@@ -404,7 +408,7 @@ setup_packet_marking() {
     fi
     
     log_success "Marcatura pacchetti configurata"
-}
+
 
 # ============================================
 # SEZIONE 6: FILTRI TC
