@@ -78,7 +78,7 @@ init_logging() {
 }
 
 
-# Funzioni di output con colori ANSI
+# Funzioni di output
 log_info() {
     [ "$VERBOSE" -eq 1 ] && echo -e "[INFO] $*"
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] INFO: $*" >> "$LOG_FILE"
@@ -95,7 +95,7 @@ log_error() {
 }
 
 log_warning() {
-    [ "$VERBOSE" -eq 1 ] && echo -e "\033[1;33m[AVVISO]\033[0m $*"
+    [ "$VERBOSE" -eq 1 ] && echo -e "[AVVISO] $*"
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] AVVISO: $*" >> "$LOG_FILE"
 }
 
