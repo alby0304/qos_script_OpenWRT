@@ -372,7 +372,9 @@ setup_packet_marking()
     # --- ICMP (ping) ---
     $IPT -t mangle -A QOS_MARK -p icmp -j MARK --set-mark 10
 
-    
+    # Interruzione la catena
+    $IPT -t mangle -A QOS_MARK -m mark --mark 10 -j RETURN
+
     # --- MARCA 20: VoIP/Video ---
     # UDP
     for port in $(echo $VOIP_PORTS_UDP | tr ',' ' '); do
@@ -383,6 +385,9 @@ setup_packet_marking()
     for port in $(echo $VOIP_PORTS_TCP | tr ',' ' '); do
         $IPT -t mangle -A QOS_MARK -p tcp --dport $port -j MARK --set-mark 20
     done
+
+    # Interruzione la catena
+    $IPT -t mangle -A QOS_MARK -m mark --mark 20 -j RETURN
     
     # --- MARCA 100: Utente Alta Priorità ---
     for net in $(echo $RETE_PRIORITA_ALTA | tr ',' ' '); do
@@ -468,12 +473,12 @@ show_statistics() {
     echo "--- CLASSI HFSC ---"
     $TC -s class show dev $iface | while read line; do
         case "$line" in
-            *"class hfsc 1:10"*) echo "[INTERATTIVO] $line" ;;
-            *"class hfsc 1:20"*) echo "[VOIP]        $line" ;;
-            *"class hfsc 1:100"*) echo "[ALTA PRIO]   $line" ;;
-            *"class hfsc 1:200"*) echo "[MEDIA PRIO]  $line" ;;
-            *"class hfsc 1:300"*) echo "[BASSA PRIO]  $line" ;;
-            *"class hfsc 1:999"*) echo "[DEFAULT]     $line" ;;
+            *"class hfsc 1:10 "*) echo "[INTERATTIVO] $line" ;;
+            *"class hfsc 1:20 "*) echo "[VOIP]        $line" ;;
+            *"class hfsc 1:100 "*) echo "[ALTA PRIO]   $line" ;;
+            *"class hfsc 1:200 "*) echo "[MEDIA PRIO]  $line" ;;
+            *"class hfsc 1:300 "*) echo "[BASSA PRIO]  $line" ;;
+            *"class hfsc 1:999 "*) echo "[DEFAULT]     $line" ;;
             *"Sent"*) echo "              $line" ;;
         esac
     done
@@ -512,12 +517,12 @@ monitor_realtime() {
             /class[[:space:]]+hfsc/ {
                 cid = $3
                 name = "UNKNOWN"
-                if (cid=="1:10")   name="INTERATTIVO"
-                else if (cid=="1:20")  name="VOIP"
-                else if (cid=="1:100") name="ALTA_PRIO"
-                else if (cid=="1:200") name="MEDIA_PRIO"
-                else if (cid=="1:300") name="BASSA_PRIO"
-                else if (cid=="1:999") name="DEFAULT"
+                if (cid=="1:10 ")   name="INTERATTIVO"
+                else if (cid=="1:20 ")  name="VOIP"
+                else if (cid=="1:100 ") name="ALTA_PRIO"
+                else if (cid=="1:200 ") name="MEDIA_PRIO"
+                else if (cid=="1:300 ") name="BASSA_PRIO"
+                else if (cid=="1:999 ") name="DEFAULT"
 
                 # leggi la riga successiva con le stats
                 if (getline > 0) {
