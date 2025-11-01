@@ -4,7 +4,7 @@ A Quality of Service (QoS) system for OpenWrt routers using the HFSC (Hierarchic
 
 ## About This Project
 
-This project was developed as part of a Bachelor's thesis in Computer Science at the [University of Padova]([https://www.linkedin.com/school/university-of-padova/](https://www.linkedin.com/school/university-of-padova), supervised by [Prof. Stefano Tomasin]([https://www.linkedin.com/in/stefano-tomasin/](https://www.linkedin.com/in/stefano-tomasin-6a92532/)).
+This project was developed as part of a Bachelor's thesis in Computer Science at the [University of Padova]([https://www.linkedin.com/school/university-of-padova/](https://www.linkedin.com/school/university-of-padova)), supervised by [Prof. Stefano Tomasin]([https://www.linkedin.com/in/stefano-tomasin/](https://www.linkedin.com/in/stefano-tomasin-6a92532/)).
 
 **Thesis Title:** "Routing di Traffico con Diverso QoS in OpenWrt"  
 **Academic Year:** 2024-2025
