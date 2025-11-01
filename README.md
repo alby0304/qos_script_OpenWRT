@@ -55,8 +55,8 @@ BANDA_DOWNLOAD=10000      # Download speed
 
 **User priorities:**
 ```bash
-# High priority users (IP addresses)
-RETE_PRIORITA_ALTA="192.168.1.10/32"
+# High priority users (Network addresses)
+RETE_PRIORITA_ALTA="192.168.1.10/32 192.168.2.0/24"
 
 # Medium priority users
 RETE_PRIORITA_MEDIA="192.168.1.20/32"
